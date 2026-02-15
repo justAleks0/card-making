@@ -621,6 +621,8 @@
       <span>Exports a single JSON object for each card.</span>
     </div>
     <div class="footer-right">
+      <input type="file" id="import-json-input" accept=".json,application/json" style="display:none" />
+      <button type="button" class="btn ghost" id="import-json-btn">Import JSON</button>
       <button type="button" class="btn ghost" id="reset-btn">Reset</button>
       <button type="button" class="btn primary" id="download-btn">Download JSON</button>
     </div>
@@ -674,6 +676,8 @@
     const copyJsonBtn = document.getElementById('copy-json-btn');
     const resetBtn = document.getElementById('reset-btn');
     const downloadBtn = document.getElementById('download-btn');
+    const importJsonBtn = document.getElementById('import-json-btn');
+    const importJsonInput = document.getElementById('import-json-input');
     const errorBox = document.getElementById('error-box');
     const toastEl = document.getElementById('toast');
 
@@ -1050,21 +1054,19 @@
       });
     }
 
-    function loadFromLocal() {
-      const saved = localStorage.getItem('card_maker_draft');
-      if (!saved) {
-        addToolRow();
-        updatePreview();
-        return;
-      }
-      let data;
-      try {
-        data = JSON.parse(saved);
-      } catch (e) {
-        addToolRow();
-        updatePreview();
-        return;
-      }
+    if(importJsonBtn && importJsonInput){
+      importJsonBtn.addEventListener('click', ()=> importJsonInput.click());
+      importJsonInput.addEventListener('change', ()=>{
+        const file = importJsonInput.files && importJsonInput.files[0];
+        if(file) {
+          importFromJsonFile(file);
+          importJsonInput.value = '';
+        }
+      });
+    }
+
+    function applyCardData(data) {
+      if (!data || typeof data !== 'object') return;
       setType(data.kind === 'shortcut' ? 'shortcut' : 'game');
       nameInput.value = data.name || '';
       imageInput.value = data.image || '';
@@ -1081,6 +1083,47 @@
         linkInput.value = data.link || '';
       }
       updatePreview();
+    }
+
+    function loadFromLocal() {
+      const saved = localStorage.getItem('card_maker_draft');
+      if (!saved) {
+        addToolRow();
+        updatePreview();
+        return;
+      }
+      let data;
+      try {
+        data = JSON.parse(saved);
+      } catch (e) {
+        addToolRow();
+        updatePreview();
+        return;
+      }
+      applyCardData(data);
+    }
+
+    function importFromJsonFile(file) {
+      const reader = new FileReader();
+      reader.onload = function () {
+        let data;
+        try {
+          data = JSON.parse(reader.result);
+        } catch (e) {
+          setError('Invalid JSON in file.');
+          showToast('Import failed: invalid JSON');
+          return;
+        }
+        if (!data.kind || (data.kind !== 'game' && data.kind !== 'shortcut')) {
+          setError('JSON must be a game or shortcut card (has "kind": "game" or "shortcut").');
+          showToast('Import failed: not a card JSON');
+          return;
+        }
+        applyCardData(data);
+        setError('');
+        showToast('Imported: ' + (data.name || 'card'));
+      };
+      reader.readAsText(file, 'UTF-8');
     }
 
     // initial state: restore draft or show empty form
