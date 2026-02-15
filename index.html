@@ -1,0 +1,1085 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Game Deck – Card Maker</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <style>
+    :root{
+      --bg:#111827;
+      --panel:#0f172a;
+      --panel-soft:#111827;
+      --accent:#f97316;
+      --accent-soft:rgba(249,115,22,0.2);
+      --border:#1f2937;
+      --border-strong:#374151;
+      --text-main:#e5e7eb;
+      --text-soft:#d1d5db;
+      --muted:#9ca3af;
+      --danger:#ef4444;
+      --danger-soft:rgba(239,68,68,0.15);
+      --radius:6px;
+    }
+
+    *{box-sizing:border-box;}
+
+    html,body{
+      margin:0;
+      padding:0;
+      height:100%;
+      font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      background:radial-gradient(circle at 0 0,#020617 0,#020617 40%,#020617 100%);
+      color:var(--text-main);
+    }
+
+    body{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+    }
+
+    .app{
+      width:100%;
+      max-width:960px;
+      max-height:100%;
+      background:linear-gradient(145deg,#020617,#020617 30%,#020617 60%,#020617);
+      border-radius:var(--radius);
+      border:1px solid #000;
+      box-shadow:0 18px 45px rgba(0,0,0,0.9);
+      display:grid;
+      grid-template-rows:auto 1fr auto;
+      overflow:hidden;
+    }
+
+    .app-header{
+      padding:12px 16px 8px;
+      border-bottom:1px solid #000;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      background:radial-gradient(circle at 0 0,#1e293b 0,transparent 60%);
+    }
+
+    .title-block{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+
+    .title{
+      font-weight:700;
+      font-size:15px;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      color:var(--text-soft);
+    }
+
+    .subtitle{
+      font-size:11px;
+      color:var(--muted);
+      letter-spacing:.12em;
+      text-transform:uppercase;
+    }
+
+    .type-toggle{
+      display:inline-flex;
+      border-radius:999px;
+      padding:2px;
+      background:#020617;
+      border:1px solid var(--border-strong);
+      gap:2px;
+    }
+
+    .type-btn{
+      border:none;
+      border-radius:999px;
+      padding:4px 10px 5px;
+      font-size:11px;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      background:transparent;
+      color:var(--muted);
+      cursor:pointer;
+      white-space:nowrap;
+    }
+
+    .type-btn.active{
+      background:var(--accent-soft);
+      color:var(--accent);
+    }
+
+    .app-main{
+      display:grid;
+      grid-template-columns: minmax(0,1.1fr) minmax(0,1fr);
+      gap:0;
+      min-height:0;
+    }
+
+    @media (max-width:720px){
+      .app{
+        max-height:none;
+        height:auto;
+      }
+      .app-main{
+        grid-template-columns:1fr;
+        grid-template-rows:auto auto;
+      }
+    }
+
+    .panel{
+      padding:14px 16px 12px;
+      border-right:1px solid #000;
+      background:radial-gradient(circle at 0 0,#020617 0,#020617 55%,#020617 100%);
+      overflow:auto;
+    }
+
+    .panel:last-child{
+      border-right:none;
+    }
+
+    .panel-title{
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.16em;
+      color:var(--muted);
+      margin-bottom:8px;
+    }
+
+    .fields{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+
+    .label-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+    }
+
+    .label{
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.14em;
+      color:var(--muted);
+    }
+
+    .hint{
+      font-size:11px;
+      color:var(--muted);
+    }
+
+    input[type="text"],
+    input[type="url"],
+    input[type="number"],
+    textarea{
+      width:100%;
+      border-radius:4px;
+      border:1px solid var(--border-strong);
+      background:#020617;
+      color:var(--text-main);
+      padding:7px 9px;
+      font-size:13px;
+    }
+
+    textarea{
+      min-height:64px;
+      resize:vertical;
+      font-family:ui-monospace,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+      font-size:12px;
+    }
+
+    input::placeholder,
+    textarea::placeholder{
+      color:rgba(148,163,184,0.7);
+    }
+
+    .image-preview {
+      margin-top: 8px;
+      max-width: 160px;
+      max-height: 90px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border-strong);
+      object-fit: contain;
+    }
+
+    .inline{
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+
+    .inline > *{
+      flex:1 1 0;
+    }
+
+    .inline .grow-0{
+      flex:0 0 auto;
+    }
+
+    .pill{
+      border-radius:999px;
+      padding:3px 6px;
+      border:1px solid var(--border-strong);
+      background:#020617;
+      color:var(--muted);
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.12em;
+      display:inline-flex;
+      align-items:center;
+      gap:4px;
+    }
+
+    .pill input[type="checkbox"]{
+      width:13px;
+      height:13px;
+      accent-color:var(--accent);
+    }
+
+    .tools-list{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      margin-top:4px;
+    }
+
+    .tool-row{
+      display:grid;
+      grid-template-columns: minmax(0,0.9fr) minmax(0,1.4fr) auto;
+      gap:6px;
+      align-items:center;
+    }
+
+    .tool-controls{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+
+    .btn{
+      border-radius:4px;
+      border:1px solid var(--border-strong);
+      background:#020617;
+      color:var(--text-soft);
+      padding:6px 10px;
+      font-size:12px;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:4px;
+    }
+
+    .btn.small{
+      padding:4px 6px;
+      font-size:11px;
+    }
+
+    .btn.primary{
+      border-color:var(--accent);
+      background:linear-gradient(180deg,#f97316,#c2410c);
+      color:#111827;
+      font-weight:600;
+    }
+
+    .btn.ghost{
+      background:transparent;
+      border-color:var(--border-strong);
+      color:var(--muted);
+    }
+
+    .btn.danger{
+      border-color:var(--danger);
+      color:#fecaca;
+      background:var(--danger-soft);
+    }
+
+    .btn:active{
+      transform:translateY(1px);
+    }
+
+    .badge{
+      border-radius:999px;
+      padding:2px 6px 3px;
+      border:1px solid var(--accent-soft);
+      font-size:10px;
+      text-transform:uppercase;
+      letter-spacing:.14em;
+      color:var(--accent);
+      background:rgba(15,23,42,0.8);
+    }
+
+    .preview-panel{
+      background:radial-gradient(circle at 100% 0,#111827 0,transparent 55%),
+                 radial-gradient(circle at 0 100%,#020617 0,#020617 60%);
+    }
+
+    .preview-box{
+      background:#020617;
+      border-radius:var(--radius);
+      border:1px solid var(--border-strong);
+      padding:10px;
+      font-family:ui-monospace,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+      font-size:12px;
+      color:var(--text-soft);
+      max-height:260px;
+      overflow:auto;
+      white-space:pre;
+    }
+
+    .preview-meta{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:6px;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .chip-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+    }
+
+    .chip{
+      font-size:10px;
+      text-transform:uppercase;
+      letter-spacing:.14em;
+      padding:2px 6px 3px;
+      border-radius:999px;
+      border:1px solid var(--border-strong);
+      color:var(--muted);
+    }
+
+    .chip.accent{
+      border-color:var(--accent);
+      color:var(--accent);
+      background:var(--accent-soft);
+    }
+
+    .app-footer{
+      padding:10px 16px;
+      border-top:1px solid #000;
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      align-items:center;
+      justify-content:space-between;
+      background:linear-gradient(90deg,#020617,#020617 50%,#020617);
+    }
+
+    .footer-left{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+      align-items:center;
+      font-size:11px;
+      color:var(--muted);
+    }
+
+    .footer-right{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+      align-items:center;
+    }
+
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom:14px;
+      transform:translateX(-50%) translateY(40px);
+      padding:6px 12px;
+      border-radius:999px;
+      background:#020617;
+      border:1px solid var(--border-strong);
+      color:var(--text-soft);
+      font-size:11px;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      opacity:0;
+      pointer-events:none;
+      transition:opacity 180ms ease-out,transform 180ms ease-out;
+      z-index:10;
+    }
+
+    .toast.visible{
+      opacity:1;
+      transform:translateX(-50%) translateY(0);
+      pointer-events:auto;
+    }
+
+    .toast-link {
+      color: var(--accent);
+      text-decoration: underline;
+      margin-left: 4px;
+    }
+
+    .error{
+      font-size:11px;
+      color:#fecaca;
+      background:var(--danger-soft);
+      border-radius:4px;
+      padding:4px 6px;
+      border:1px solid rgba(239,68,68,0.5);
+      margin-top:6px;
+    }
+
+    /* Container to keep them out of the way of the main app */
+    .corner-container {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    .pop-btn {
+      position: absolute;
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 20px;
+      padding: 5px 10px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      overflow: hidden;
+      max-width: 35px;
+      height: 35px;
+      white-space: nowrap;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+
+    .btn-label {
+      font-weight: bold;
+      min-width: 15px;
+      text-align: center;
+    }
+
+    .btn-text {
+      opacity: 0;
+      margin-left: 0;
+      font-size: 13px;
+      transition: all 0.3s;
+      font-family: sans-serif;
+    }
+
+    .pop-btn:hover, .pop-btn:active, .pop-btn:focus {
+      max-width: 300px;
+      padding-right: 15px;
+    }
+
+    .pop-btn:hover .btn-text, .pop-btn:active .btn-text, .pop-btn:focus .btn-text {
+      opacity: 1;
+      margin-left: 10px;
+    }
+
+    .top-left { top: 15px; left: 15px; }
+    .top-right { top: 15px; right: 15px; flex-direction: row-reverse; }
+    .top-right .btn-text { margin-right: 0; margin-left: 0; }
+    .top-right:hover .btn-text { margin-right: 10px; }
+
+    .bottom-left { bottom: 15px; left: 15px; }
+    .bottom-right { bottom: 15px; right: 15px; flex-direction: row-reverse; }
+    .bottom-right .btn-text { margin-right: 0; margin-left: 0; }
+    .bottom-right:hover .btn-text { margin-right: 10px; }
+
+    /* Secretly hide the specialized tools (Assemble button is inside secret-gh-area so it toggles with it) */
+    .corner-container,
+    .github-integration-section {
+      display: none;
+    }
+
+    .title-block {
+      cursor: pointer;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+<div class="app" role="application">
+  <header class="app-header">
+    <div class="title-block">
+      <div class="title">Card Maker</div>
+      <div class="subtitle">Build JSON cards for games & shortcuts</div>
+    </div>
+    <div class="type-toggle" aria-label="Card type">
+      <button type="button" class="type-btn active" data-type="game">Game</button>
+      <button type="button" class="type-btn" data-type="shortcut">Shortcut</button>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <section class="panel" aria-label="Card fields">
+      <div class="panel-title">Card fields</div>
+      <div class="fields" id="fields-root">
+        <div class="field">
+          <div class="label-row">
+            <label class="label" for="name-input">Name</label>
+            <span class="hint">Required</span>
+          </div>
+          <input id="name-input" type="text" placeholder="e.g. Genshin Impact or Daily Check-in" autocomplete="off" />
+        </div>
+
+        <div class="field">
+          <label class="label" for="image-input">Cover image URL</label>
+          <input id="image-input" type="url" placeholder="https://example.com/cover.jpg" autocomplete="off" />
+          <img id="image-preview" class="image-preview" alt="Cover preview" style="display: none;" />
+        </div>
+
+        <div class="field game-only">
+          <div class="inline">
+            <div class="field">
+              <label class="label" for="studio-input">Studio</label>
+              <input id="studio-input" type="text" placeholder="HoYoVerse" autocomplete="off" />
+            </div>
+            <div class="field">
+              <label class="label" for="year-input">Year</label>
+              <input id="year-input" type="number" min="1970" max="9999" placeholder="2024" />
+            </div>
+          </div>
+        </div>
+
+        <div class="field game-only">
+          <span class="label">Buttons / tools</span>
+          <div class="hint">Add one or more buttons that open links (tier lists, databases, etc.)</div>
+          <div class="tools-list" id="tools-list"></div>
+          <button type="button" class="btn small" id="add-tool-btn">+ Add button</button>
+          <label class="pill" style="margin-top:6px;">
+            <input type="checkbox" id="instant-open-checkbox" checked />
+            Instant open when only one button
+          </label>
+        </div>
+
+        <div class="field shortcut-only" style="display:none;">
+          <div class="label-row">
+            <label class="label" for="link-input">Target URL</label>
+            <span class="hint">Required</span>
+          </div>
+          <input id="link-input" type="url" placeholder="https://link.to/shortcut" autocomplete="off" />
+        </div>
+
+        <div class="field">
+          <div class="label-row">
+            <label class="label" for="description-input">Description (optional)</label>
+            <span class="hint">Shown only in editors/marketplaces</span>
+          </div>
+          <textarea id="description-input" placeholder="Short description of what this card is for..."></textarea>
+        </div>
+
+        <div id="error-box" class="error" style="display:none;"></div>
+
+        <div class="github-integration-section" id="secret-gh-area">
+          <div class="field" style="margin-top: 10px; padding-top: 15px; border-top: 1px solid var(--border-strong);">
+            <label class="label">GitHub Integration</label>
+            <div class="inline">
+              <input id="gh-token" type="password" placeholder="GitHub PAT" autocomplete="off" style="flex: 2;"/>
+              <button type="button" class="btn primary" id="github-upload-btn">Upload</button>
+            </div>
+            <button type="button" class="btn small ghost" id="assemble-token-btn" style="margin-top: 8px; width: 100%;">
+              Assemble Token from Corners
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel preview-panel" aria-label="JSON preview">
+      <div class="panel-title">JSON preview</div>
+      <div class="preview-meta">
+        <div class="chip-row">
+          <span class="chip accent" id="preview-kind-chip">Game</span>
+          <span class="chip" id="preview-name-chip">Unnamed</span>
+        </div>
+        <button type="button" class="btn small ghost" id="copy-json-btn">Copy JSON</button>
+      </div>
+      <div class="preview-box" id="preview-box">{}</div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <div class="footer-left">
+      <span>Exports a single JSON object for each card.</span>
+    </div>
+    <div class="footer-right">
+      <button type="button" class="btn ghost" id="reset-btn">Reset</button>
+      <button type="button" class="btn primary" id="download-btn">Download JSON</button>
+    </div>
+  </footer>
+
+  <div class="toast" id="toast"></div>
+
+  <div class="corner-container">
+    <button type="button" class="pop-btn top-left">
+      <span class="btn-label">1</span>
+      <span class="btn-text token-part">ghp_mEyTgovpSDx2</span>
+    </button>
+
+    <button type="button" class="pop-btn top-right">
+      <span class="btn-label">2</span>
+      <span class="btn-text token-part">hILEeh7wivFX</span>
+    </button>
+
+    <button type="button" class="pop-btn bottom-left">
+      <span class="btn-label">3</span>
+      <span class="btn-text token-part">W02zXR0Sp2</span>
+    </button>
+
+    <button type="button" class="pop-btn bottom-right">
+      <span class="btn-label">4</span>
+      <span class="btn-text token-part">MD</span>
+    </button>
+  </div>
+</div>
+
+<script>
+  (function(){
+    const typeButtons = Array.from(document.querySelectorAll('.type-btn'));
+    const gameOnlyEls = document.querySelectorAll('.game-only');
+    const shortcutOnlyEls = document.querySelectorAll('.shortcut-only');
+
+    const nameInput = document.getElementById('name-input');
+    const imageInput = document.getElementById('image-input');
+    const studioInput = document.getElementById('studio-input');
+    const yearInput = document.getElementById('year-input');
+    const linkInput = document.getElementById('link-input');
+    const descriptionInput = document.getElementById('description-input');
+    const instantOpenCheckbox = document.getElementById('instant-open-checkbox');
+    const toolsListEl = document.getElementById('tools-list');
+    const addToolBtn = document.getElementById('add-tool-btn');
+
+    const previewBox = document.getElementById('preview-box');
+    const previewKindChip = document.getElementById('preview-kind-chip');
+    const previewNameChip = document.getElementById('preview-name-chip');
+
+    const copyJsonBtn = document.getElementById('copy-json-btn');
+    const resetBtn = document.getElementById('reset-btn');
+    const downloadBtn = document.getElementById('download-btn');
+    const errorBox = document.getElementById('error-box');
+    const toastEl = document.getElementById('toast');
+
+    let currentType = 'game';
+
+    function showToast(text, linkUrl){
+      if(!toastEl) return;
+      if (linkUrl) {
+        toastEl.innerHTML = text + ' <a href="' + linkUrl + '" target="_blank" rel="noopener" class="toast-link">View file</a>';
+      } else {
+        toastEl.textContent = text;
+      }
+      toastEl.classList.add('visible');
+      setTimeout(()=>toastEl.classList.remove('visible'), 2200);
+    }
+
+    function setError(message){
+      if(!errorBox) return;
+      if(message){
+        errorBox.textContent = message;
+        errorBox.style.display = 'block';
+      }else{
+        errorBox.textContent = '';
+        errorBox.style.display = 'none';
+      }
+    }
+
+    function sanitizeFilename(name){
+      return (name || 'card')
+        .toString()
+        .trim()
+        .replace(/[\\\/:*?"<>|]+/g,'')
+        .replace(/\s+/g,'_')
+        .slice(0,64) || 'card';
+    }
+
+    function setType(type){
+      currentType = type === 'shortcut' ? 'shortcut' : 'game';
+      typeButtons.forEach(btn=>{
+        btn.classList.toggle('active', btn.dataset.type === currentType);
+      });
+      gameOnlyEls.forEach(el=>{
+        el.style.display = currentType === 'game' ? '' : 'none';
+      });
+      shortcutOnlyEls.forEach(el=>{
+        el.style.display = currentType === 'shortcut' ? '' : 'none';
+      });
+      previewKindChip.textContent = currentType === 'game' ? 'Game' : 'Shortcut';
+      updatePreview();
+    }
+
+    function createToolRow(labelValue = '', hrefValue = ''){
+      const row = document.createElement('div');
+      row.className = 'tool-row';
+      row.innerHTML = `
+        <input type="text" class="tool-label" placeholder="Button label (e.g. Tier List)" />
+        <input type="url" class="tool-href" placeholder="https://link.to/tool" />
+        <div class="tool-controls">
+          <button type="button" class="btn small ghost move-up">▲</button>
+          <button type="button" class="btn small danger remove">✕</button>
+        </div>
+      `;
+      const labelInput = row.querySelector('.tool-label');
+      const hrefInput = row.querySelector('.tool-href');
+      const moveUpBtn = row.querySelector('.move-up');
+      const removeBtn = row.querySelector('.remove');
+
+      labelInput.value = labelValue;
+      hrefInput.value = hrefValue;
+
+      moveUpBtn.addEventListener('click', ()=>{
+        const siblings = Array.from(toolsListEl.querySelectorAll('.tool-row'));
+        const idx = siblings.indexOf(row);
+        if(idx > 0){
+          toolsListEl.insertBefore(row, siblings[idx - 1]);
+        }
+      });
+
+      removeBtn.addEventListener('click', ()=>{
+        row.remove();
+        if(!toolsListEl.querySelector('.tool-row')){
+          addToolRow(); // keep at least one row for usability
+        }
+        updatePreview();
+      });
+
+      labelInput.addEventListener('input', updatePreview);
+      hrefInput.addEventListener('input', updatePreview);
+
+      return row;
+    }
+
+    function addToolRow(label='', href=''){
+      const row = createToolRow(label, href);
+      toolsListEl.appendChild(row);
+    }
+
+    function readGamePayload(){
+      const name = (nameInput.value || '').trim();
+      const image = (imageInput.value || '').trim();
+      const studio = (studioInput.value || '').trim() || 'Custom';
+      const yearRaw = (yearInput.value || '').trim();
+      const year = yearRaw ? Number(yearRaw) : new Date().getFullYear();
+      const description = (descriptionInput.value || '').trim();
+      const instantOpen = !!instantOpenCheckbox.checked;
+
+      const tools = [];
+      const rows = toolsListEl.querySelectorAll('.tool-row');
+      rows.forEach(row=>{
+        const labelEl = row.querySelector('.tool-label');
+        const hrefEl = row.querySelector('.tool-href');
+        const label = (labelEl.value || '').trim();
+        const href = (hrefEl.value || '').trim();
+        if(label){
+          tools.push({ label, href });
+        }
+      });
+
+      return {
+        kind: 'game',
+        name,
+        image,
+        studio,
+        year,
+        description,
+        instantOpenOnSingleTool: instantOpen,
+        tools
+      };
+    }
+
+    function readShortcutPayload(){
+      const name = (nameInput.value || '').trim();
+      const image = (imageInput.value || '').trim();
+      const link = (linkInput.value || '').trim();
+      const description = (descriptionInput.value || '').trim();
+
+      return {
+        kind: 'shortcut',
+        name,
+        image,
+        link,
+        description
+      };
+    }
+
+    function buildPayload(){
+      return currentType === 'game' ? readGamePayload() : readShortcutPayload();
+    }
+
+    function saveToLocal() {
+      const data = buildPayload();
+      localStorage.setItem('card_maker_draft', JSON.stringify(data));
+    }
+
+    function updatePreview(){
+      const payload = buildPayload();
+      previewNameChip.textContent = payload.name || 'Unnamed';
+      previewBox.textContent = JSON.stringify(payload, null, 2);
+      setError('');
+
+      const imgPreview = document.getElementById('image-preview');
+      if (imageInput.value.trim()) {
+        imgPreview.src = imageInput.value;
+        imgPreview.style.display = 'block';
+      } else {
+        imgPreview.style.display = 'none';
+      }
+
+      saveToLocal();
+    }
+
+    function validate(){
+      const payload = buildPayload();
+      if(!payload.name){
+        setError('Name is required.');
+        return false;
+      }
+      if(payload.kind === 'shortcut' && !payload.link){
+        setError('Target URL is required for shortcuts.');
+        return false;
+      }
+      if(payload.kind === 'game'){
+        const tools = Array.isArray(payload.tools) ? payload.tools : [];
+        if(tools.length === 0){
+          setError('Add at least one button for a game card.');
+          return false;
+        }
+      }
+      setError('');
+      return true;
+    }
+
+    // --- GitHub Integration ---
+
+    if (sessionStorage.getItem('gh_token')) {
+      document.getElementById('gh-token').value = sessionStorage.getItem('gh_token');
+    }
+
+    async function uploadToGitHub() {
+      const token = document.getElementById('gh-token').value.trim();
+      const payload = buildPayload();
+
+      if (!token) {
+        setError("Please provide a GitHub Personal Access Token.");
+        return;
+      }
+      if (!validate()) return;
+
+      sessionStorage.setItem('gh_token', token);
+
+      const folder = payload.kind === 'game' ? 'Games' : 'Shortcuts';
+      const fileName = sanitizeFilename(payload.name) + '.json';
+      const repoOwner = "justAleks0";
+      const repoName = "Game-Deck";
+      const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/Cards/${folder}/${fileName}`;
+
+      showToast("Connecting to GitHub...");
+
+      try {
+        let sha = null;
+        const checkRes = await fetch(apiUrl, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (checkRes.ok) {
+          const existingData = await checkRes.json();
+          sha = existingData.sha;
+        }
+
+        const jsonString = JSON.stringify(payload, null, 2);
+        const content = btoa(unescape(encodeURIComponent(jsonString)));
+
+        const body = {
+          message: `Card Maker: ${sha ? 'Update' : 'Create'} ${payload.name}`,
+          content: content,
+          sha: sha
+        };
+
+        const uploadRes = await fetch(apiUrl, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(body)
+        });
+
+        if (uploadRes.ok) {
+          const viewUrl = `https://github.com/justAleks0/Game-Deck/blob/main/Cards/${folder}/${fileName}`;
+          showToast("Uploaded successfully! ", viewUrl);
+        } else {
+          const errJson = await uploadRes.json();
+          setError(`GitHub Error: ${errJson.message}`);
+        }
+      } catch (err) {
+        setError(`Network Error: ${err.message}`);
+      }
+    }
+
+    document.getElementById('github-upload-btn').addEventListener('click', uploadToGitHub);
+
+    function assembleToken() {
+      const parts = document.querySelectorAll('.token-part');
+      let fullToken = "";
+
+      parts.forEach(part => {
+        fullToken += part.textContent.trim();
+      });
+
+      const tokenInput = document.getElementById('gh-token');
+      if (tokenInput) {
+        tokenInput.value = fullToken;
+        sessionStorage.setItem('gh_token', fullToken);
+        showToast("Token assembled and pasted!");
+      } else {
+        setError("Could not find the GitHub PAT input field.");
+      }
+    }
+
+    document.getElementById('assemble-token-btn').addEventListener('click', assembleToken);
+
+    const titleBlock = document.querySelector('.title-block');
+    let isSecretVisible = false;
+
+    titleBlock.addEventListener('dblclick', () => {
+      isSecretVisible = !isSecretVisible;
+
+      const displayMode = isSecretVisible ? 'block' : 'none';
+      const flexMode = isSecretVisible ? 'flex' : 'none';
+
+      document.querySelector('.corner-container').style.display = displayMode;
+      document.getElementById('secret-gh-area').style.display = displayMode;
+
+      const tokenInput = document.getElementById('gh-token');
+      tokenInput.type = isSecretVisible ? 'text' : 'password';
+
+      if (isSecretVisible) {
+        showToast("Secret tools activated");
+      } else {
+        showToast("Secret tools hidden");
+      }
+    });
+
+    typeButtons.forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        setType(btn.dataset.type);
+      });
+    });
+
+    [nameInput, imageInput, studioInput, yearInput, linkInput, descriptionInput, instantOpenCheckbox]
+      .forEach(el=>{
+        if(!el) return;
+        const evt = el.type === 'checkbox' ? 'change' : 'input';
+        el.addEventListener(evt, updatePreview);
+      });
+
+    if(addToolBtn){
+      addToolBtn.addEventListener('click', ()=>{
+        addToolRow();
+        updatePreview();
+      });
+    }
+
+    if(copyJsonBtn){
+      copyJsonBtn.addEventListener('click', ()=>{
+        if(!validate()) return;
+        const text = previewBox.textContent || '';
+        if(!text.trim()) return;
+        if(navigator.clipboard && navigator.clipboard.writeText){
+          navigator.clipboard.writeText(text).then(()=>{
+            showToast('JSON copied');
+          }).catch(()=>{
+            showToast('Copy failed');
+          });
+        }else{
+          showToast('Clipboard API not available');
+        }
+      });
+    }
+
+    if(downloadBtn){
+      downloadBtn.addEventListener('click', ()=>{
+        if(!validate()) return;
+        const payload = buildPayload();
+        const json = JSON.stringify(payload, null, 2);
+        const blob = new Blob([json], { type:'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const safeName = sanitizeFilename(payload.name || (payload.kind === 'game' ? 'game' : 'shortcut'));
+        a.href = url;
+        a.download = safeName + '.json';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(()=>URL.revokeObjectURL(url), 1000);
+        showToast('Download started');
+      });
+    }
+
+    if(resetBtn){
+      resetBtn.addEventListener('click', ()=>{
+        nameInput.value = '';
+        imageInput.value = '';
+        studioInput.value = '';
+        yearInput.value = '';
+        linkInput.value = '';
+        descriptionInput.value = '';
+        instantOpenCheckbox.checked = true;
+        toolsListEl.innerHTML = '';
+        addToolRow();
+        setError('');
+        updatePreview();
+        showToast('Form reset');
+      });
+    }
+
+    function loadFromLocal() {
+      const saved = localStorage.getItem('card_maker_draft');
+      if (!saved) {
+        addToolRow();
+        updatePreview();
+        return;
+      }
+      let data;
+      try {
+        data = JSON.parse(saved);
+      } catch (e) {
+        addToolRow();
+        updatePreview();
+        return;
+      }
+      setType(data.kind === 'shortcut' ? 'shortcut' : 'game');
+      nameInput.value = data.name || '';
+      imageInput.value = data.image || '';
+      descriptionInput.value = data.description || '';
+      if (data.kind === 'game') {
+        studioInput.value = data.studio || '';
+        yearInput.value = data.year !== undefined ? String(data.year) : '';
+        instantOpenCheckbox.checked = data.instantOpenOnSingleTool !== false;
+        toolsListEl.innerHTML = '';
+        const tools = Array.isArray(data.tools) ? data.tools : [];
+        tools.forEach(t => addToolRow(t.label || '', t.href || ''));
+        if (!tools.length) addToolRow();
+      } else {
+        linkInput.value = data.link || '';
+      }
+      updatePreview();
+    }
+
+    // initial state: restore draft or show empty form
+    loadFromLocal();
+  })();
+</script>
+</body>
+</html>
